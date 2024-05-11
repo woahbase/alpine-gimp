@@ -1,0 +1,31 @@
+#!/usr/bin/with-contenv bash
+set -e
+
+if [ -n "${GID_VIDEO}" ]; # update gid of 'video' if defined
+then
+    groupmod -o -g "${GID_VIDEO}" video;
+fi
+
+adduser ${S6_USER:-alpine} video;
+
+USERHOMEDIR="$(getent passwd ${S6_USER:-alpine} | cut -d: -f6)";
+GIMPVERSION="$(gimp --version|grep 'GNU Image Manipulation Program version'| awk '{print $6}')";
+
+# ensure gimp dirs
+# previously configs were in "${USERHOMEDIR}/.gimp-${GIMPVERSION%\.*}"
+mkdir -p \
+    "${USERHOMEDIR}/Pictures" \
+    "${USERHOMEDIR}/.config/GIMP/${GIMPVERSION%\.*}" \
+    "${USERHOMEDIR}/.local" \
+    ;
+
+# fix permissions
+chown ${S6_USER:-alpine}:${S6_USER:-alpine} \
+    "${USERHOMEDIR}" \
+    "${USERHOMEDIR}/Pictures" \
+    ;
+
+chown -R ${S6_USER:-alpine}:${S6_USER:-alpine} \
+    "${USERHOMEDIR}/.config/GIMP/${GIMPVERSION%\.*}" \
+    "${USERHOMEDIR}/.local" \
+    ;
