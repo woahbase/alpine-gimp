@@ -1,6 +1,9 @@
 #!/usr/bin/with-contenv bash
 set -e
 
+vecho () { if [ "${S6_VERBOSITY:-1}" -gt 0 ]; then echo "[$0] $@"; fi; }
+if [ "X${EUID}" != "X0" ]; then vecho "Skipped. Reason: no root privileges."; exit 0; fi;
+
 if [ -n "${GID_VIDEO}" ]; # update gid of 'video' if defined
 then
     groupmod -o -g "${GID_VIDEO}" video;
@@ -20,12 +23,13 @@ mkdir -p \
     ;
 
 # fix permissions
-chown ${S6_USER:-alpine}:${S6_USER:-alpine} \
+vecho "Fixing permissions.";
+chown ${S6_USER:-alpine}:${PGID:-1000} \
     "${USERHOMEDIR}" \
     "${USERHOMEDIR}/Pictures" \
     ;
 
-chown -R ${S6_USER:-alpine}:${S6_USER:-alpine} \
+chown -R ${S6_USER:-alpine}:${PGID:-1000} \
     "${USERHOMEDIR}/.config/GIMP/${GIMPVERSION%\.*}" \
     "${USERHOMEDIR}/.local" \
     ;
